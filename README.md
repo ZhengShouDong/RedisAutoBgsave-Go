@@ -1,7 +1,7 @@
 # RedisAutoBgsave-Go
 Auto background save(generate RDB file) for redis cluster(3.0+) all slave nodes.
 
-## Dependent:
+## Dependents:
 "github.com/go-redis/redis"
 
 You should on your terminal execute `go get github.com/go-redis/redis`
