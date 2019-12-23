@@ -19,9 +19,10 @@ var (
 )
 
 func main() {
-	flag.StringVar(&_host, "host", "", "Host")
-	flag.IntVar(&_port, "port", 0, "Port")
-	flag.StringVar(&_password, "password", "", "Password")
+	flag.StringVar(&_host, "h", "", "Host")
+	flag.IntVar(&_port, "p", 0, "Port")
+	flag.StringVar(&_password, "pwd", "", "Password")
+	flag.Parse()
 
 	if len(_host) == 0 || _port == 0 {
 		flag.Usage()
@@ -34,7 +35,7 @@ func main() {
 	slaveClients := getAllSlaveNodes()
 
 	for _, client := range slaveClients {
-		fmt.Println("------------------" + client.GetAddr() + "------------------")
+		fmt.Println("------------------" + client.GetAddr() + "(slave)------------------")
 		waitBgsaveFinish(client)
 		if bgsaveSuccess, err := bgsave(client); err != nil || !bgsaveSuccess {
 			fmt.Println("Background saving failed.", err)

@@ -26,7 +26,7 @@ func (c *ClusterClient) ForEachSlaveSync(fn func(client *Client) error) error {
 to the `go-redis/redis/cluster.go`
 
 ## Finally
-`cd` to the project dir, on your terminal execute `go build && ./RedisAutoBgsave-Go -host 127.0.0.1 -port 6379`
+`cd` to the project dir, on your terminal execute `go build && ./RedisAutoBgsave-Go -h 127.0.0.1 -p 6379`
 According to your actual situation, write the password options
 
 Enjoy!
