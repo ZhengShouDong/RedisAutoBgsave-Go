@@ -48,7 +48,7 @@ func main() {
 	}
 
 	fmt.Println("------------------------------------")
-	fmt.Println(strconv.Itoa(len(slaveClients)) + " nodes are completed!")
+	fmt.Println(strconv.Itoa(len(slaveClients)) + " slave nodes was completed!")
 }
 
 func getAllSlaveNodes() []*redis.Client {
