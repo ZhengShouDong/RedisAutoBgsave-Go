@@ -23,9 +23,9 @@ var (
 func main() {
 	flag.StringVar(&_host, "h", "", "Host")
 	flag.IntVar(&_port, "p", 0, "Port")
-	flag.StringVar(&_password, "pwd", "", "Password")
-	flag.BoolVar(&_isRewriteAOF, "aof", false, "Background rewrite AOF")
-	flag.BoolVar(&_isMaster, "master", false, "Execute on all master nodes")
+	flag.StringVar(&_password, "pwd", "", "Password(default: empty)")
+	flag.BoolVar(&_isRewriteAOF, "aof", false, "Background rewrite AOF(default: false)")
+	flag.BoolVar(&_isMaster, "master", false, "Execute on all master nodes(default: false)")
 	flag.Parse()
 
 	if len(_host) == 0 || _port == 0 {
