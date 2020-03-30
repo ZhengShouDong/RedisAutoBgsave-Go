@@ -2,28 +2,7 @@
 Auto background save(generate RDB file) for redis cluster(3.0+) all slave nodes.
 
 ## Dependents:
-"github.com/go-redis/redis"
-
-You should on your terminal execute `go get github.com/go-redis/redis`
-and copy this code
-```
-func (c *ClusterClient) ForEachSlaveSync(fn func(client *Client) error) error {
-	state, err := c.state.ReloadOrGet()
-	if err != nil {
-		return err
-	}
-
-	for _, slave := range state.Slaves {
-		err := fn(slave.Client)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-```
-to the `go-redis/redis/cluster.go`
+None.
 
 ## Finally
 `cd` to the project dir, on your terminal execute `go build && ./RedisAutoBgsave-Go -h 127.0.0.1 -p 6379`

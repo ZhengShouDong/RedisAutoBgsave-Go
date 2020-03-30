@@ -8,13 +8,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-redis/redis"
+	"./redis"
 )
 
 var (
 	_host          string
 	_port          int
 	_password      string
+	_isRewriteAOF  bool
+	_isMaster      bool
 	_clusterClient *redis.ClusterClient
 )
 
@@ -22,6 +24,8 @@ func main() {
 	flag.StringVar(&_host, "h", "", "Host")
 	flag.IntVar(&_port, "p", 0, "Port")
 	flag.StringVar(&_password, "pwd", "", "Password")
+	flag.BoolVar(&_isRewriteAOF, "aof", false, "Background rewrite AOF")
+	flag.BoolVar(&_isMaster, "master", false, "Execute on all master nodes")
 	flag.Parse()
 
 	if len(_host) == 0 || _port == 0 {
@@ -32,32 +36,40 @@ func main() {
 	initClusterClient([]string{getAddr(_host, _port)}, _password)
 	defer _clusterClient.Close()
 
-	slaveClients := getAllSlaveNodes()
-
-	for _, client := range slaveClients {
-		fmt.Println("------------------" + client.GetAddr() + "(slave)------------------")
-		waitBgsaveFinish(client)
-		if bgsaveSuccess, err := bgsave(client); err != nil || !bgsaveSuccess {
+	allNodes := getAllNodes(_isMaster)
+	completeCount := 0
+	for _, node := range allNodes {
+		fmt.Println("------------------" + node.GetAddr() + "(slave)------------------")
+		waitBgsaveFinish(node)
+		if bgsaveSuccess, err := startJob(node); err != nil || !bgsaveSuccess {
 			fmt.Println("Background saving failed.", err)
-			os.Exit(-1)
+			return
 		}
 
 		fmt.Println("Background saving started.")
-		waitBgsaveFinish(client)
+		waitBgsaveFinish(node)
+		completeCount++
 		time.Sleep(time.Second * 5)
 	}
 
 	fmt.Println("------------------------------------")
-	fmt.Println(strconv.Itoa(len(slaveClients)) + " slave nodes was completed!")
+	fmt.Println(strconv.Itoa(len(allNodes)) + " slave nodes has been completed!")
 }
 
-func getAllSlaveNodes() []*redis.Client {
+func getAllNodes(isMaster bool) []*redis.Client {
 	clients := []*redis.Client{}
 
-	_clusterClient.ForEachSlaveSync(func(client *redis.Client) error {
-		clients = append(clients, client)
-		return nil
-	})
+	if !isMaster {
+		_clusterClient.ForEachSlaveSync(func(client *redis.Client) error {
+			clients = append(clients, client)
+			return nil
+		})
+	} else {
+		_clusterClient.ForEachMasterSync(func(client *redis.Client) error {
+			clients = append(clients, client)
+			return nil
+		})
+	}
 
 	if len(clients) == 0 {
 		fmt.Println("No slave nodes!")
@@ -99,13 +111,22 @@ func getBgsaveInProgress(client *redis.Client) (bool, error) {
 	return info[startIndex:startIndex+1] == "1", nil
 }
 
-func bgsave(client *redis.Client) (bool, error) {
-	result, err := client.BgSave().Result()
+func startJob(client *redis.Client) (bool, error) {
+	if !_isRewriteAOF {
+		result, err := client.BgSave().Result()
+		if err != nil {
+			return false, err
+		}
+
+		return result == "Background saving started", nil
+	}
+
+	result, err := client.BgRewriteAOF().Result()
 	if err != nil {
 		return false, err
 	}
 
-	return result == "Background saving started", nil
+	return result == "Background append only file rewriting started", nil
 }
 
 func initClusterClient(addrs []string, password string) {
